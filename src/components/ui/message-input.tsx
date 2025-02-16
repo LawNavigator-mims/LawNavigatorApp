@@ -1,37 +1,37 @@
-"use client"
+"use client";
 
-import React, { useEffect, useRef, useState } from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import { ArrowUp, Paperclip, Square, X } from "lucide-react"
-import { omit } from "remeda"
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+import { omit } from "remeda";
 
-import { cn } from "@/lib/utils"
-import { useAutosizeTextArea } from "@/hooks/use-autosize-textarea"
-import { Button } from "@/components/ui/button"
-import { FilePreview } from "@/components/ui/file-preview"
+import { cn } from "@/lib/utils";
+import { useAutosizeTextArea } from "@/hooks/use-autosize-textarea";
+import { Button } from "@/components/ui/button";
+import { FilePreview } from "@/components/ui/file-preview";
 
 interface MessageInputBaseProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  value: string
-  submitOnEnter?: boolean
-  stop?: () => void
-  isGenerating: boolean
-  enableInterrupt?: boolean
+  value: string;
+  submitOnEnter?: boolean;
+  stop?: () => void;
+  isGenerating: boolean;
+  enableInterrupt?: boolean;
 }
 
 interface MessageInputWithoutAttachmentProps extends MessageInputBaseProps {
-  allowAttachments?: false
+  allowAttachments?: false;
 }
 
 interface MessageInputWithAttachmentsProps extends MessageInputBaseProps {
-  allowAttachments: true
-  files: File[] | null
-  setFiles: React.Dispatch<React.SetStateAction<File[] | null>>
+  allowAttachments: true;
+  files: File[] | null;
+  setFiles: React.Dispatch<React.SetStateAction<File[] | null>>;
 }
 
 type MessageInputProps =
   | MessageInputWithoutAttachmentProps
-  | MessageInputWithAttachmentsProps
+  | MessageInputWithAttachmentsProps;
 
 export function MessageInput({
   placeholder = "Ask AI...",
@@ -43,113 +43,113 @@ export function MessageInput({
   enableInterrupt = true,
   ...props
 }: MessageInputProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [showInterruptPrompt, setShowInterruptPrompt] = useState(false)
+  const [isDragging, setIsDragging] = useState(false);
+  const [showInterruptPrompt, setShowInterruptPrompt] = useState(false);
 
   useEffect(() => {
     if (!isGenerating) {
-      setShowInterruptPrompt(false)
+      setShowInterruptPrompt(false);
     }
-  }, [isGenerating])
+  }, [isGenerating]);
 
   const addFiles = (files: File[] | null) => {
     if (props.allowAttachments) {
       props.setFiles((currentFiles) => {
         if (currentFiles === null) {
-          return files
+          return files;
         }
 
         if (files === null) {
-          return currentFiles
+          return currentFiles;
         }
 
-        return [...currentFiles, ...files]
-      })
+        return [...currentFiles, ...files];
+      });
     }
-  }
+  };
 
   const onDragOver = (event: React.DragEvent) => {
-    if (props.allowAttachments !== true) return
-    event.preventDefault()
-    setIsDragging(true)
-  }
+    if (props.allowAttachments !== true) return;
+    event.preventDefault();
+    setIsDragging(true);
+  };
 
   const onDragLeave = (event: React.DragEvent) => {
-    if (props.allowAttachments !== true) return
-    event.preventDefault()
-    setIsDragging(false)
-  }
+    if (props.allowAttachments !== true) return;
+    event.preventDefault();
+    setIsDragging(false);
+  };
 
   const onDrop = (event: React.DragEvent) => {
-    setIsDragging(false)
-    if (props.allowAttachments !== true) return
-    event.preventDefault()
-    const dataTransfer = event.dataTransfer
+    setIsDragging(false);
+    if (props.allowAttachments !== true) return;
+    event.preventDefault();
+    const dataTransfer = event.dataTransfer;
     if (dataTransfer.files.length) {
-      addFiles(Array.from(dataTransfer.files))
+      addFiles(Array.from(dataTransfer.files));
     }
-  }
+  };
 
   const onPaste = (event: React.ClipboardEvent) => {
-    const items = event.clipboardData?.items
-    if (!items) return
+    const items = event.clipboardData?.items;
+    if (!items) return;
 
-    const text = event.clipboardData.getData("text")
+    const text = event.clipboardData.getData("text");
     if (text && text.length > 500 && props.allowAttachments) {
-      event.preventDefault()
-      const blob = new Blob([text], { type: "text/plain" })
+      event.preventDefault();
+      const blob = new Blob([text], { type: "text/plain" });
       const file = new File([blob], "Pasted text", {
         type: "text/plain",
         lastModified: Date.now(),
-      })
-      addFiles([file])
-      return
+      });
+      addFiles([file]);
+      return;
     }
 
     const files = Array.from(items)
       .map((item) => item.getAsFile())
-      .filter((file) => file !== null)
+      .filter((file) => file !== null) as File[];
 
     if (props.allowAttachments && files.length > 0) {
-      addFiles(files)
+      addFiles(files);
     }
-  }
+  };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (submitOnEnter && event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault()
+      event.preventDefault();
 
       if (isGenerating && stop && enableInterrupt) {
         if (showInterruptPrompt) {
-          stop()
-          setShowInterruptPrompt(false)
-          event.currentTarget.form?.requestSubmit()
+          stop();
+          setShowInterruptPrompt(false);
+          event.currentTarget.form?.requestSubmit();
         } else if (
           props.value ||
           (props.allowAttachments && props.files?.length)
         ) {
-          setShowInterruptPrompt(true)
-          return
+          setShowInterruptPrompt(true);
+          return;
         }
       }
 
-      event.currentTarget.form?.requestSubmit()
+      event.currentTarget.form?.requestSubmit();
     }
 
-    onKeyDownProp?.(event)
-  }
+    onKeyDownProp?.(event);
+  };
 
-  const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const showFileList =
-    props.allowAttachments && props.files && props.files.length > 0
+    props.allowAttachments && props.files && props.files.length > 0;
 
   useAutosizeTextArea({
     ref: textAreaRef,
     maxHeight: 240,
     borderWidth: 1,
     dependencies: [props.value, showFileList],
-  })
+  });
 
   return (
     <div
@@ -192,17 +192,17 @@ export function MessageInput({
                     file={file}
                     onRemove={() => {
                       props.setFiles((files) => {
-                        if (!files) return null
+                        if (!files) return null;
 
                         const filtered = Array.from(files).filter(
                           (f) => f !== file
-                        )
-                        if (filtered.length === 0) return null
-                        return filtered
-                      })
+                        );
+                        if (filtered.length === 0) return null;
+                        return filtered;
+                      });
                     }}
                   />
-                )
+                );
               })}
             </AnimatePresence>
           </div>
@@ -218,8 +218,8 @@ export function MessageInput({
             className="h-8 w-8"
             aria-label="Attach a file"
             onClick={async () => {
-              const files = await showFileUploadDialog()
-              addFiles(files)
+              const files = await showFileUploadDialog();
+              addFiles(files);
             }}
           >
             <Paperclip className="h-4 w-4" />
@@ -250,13 +250,13 @@ export function MessageInput({
 
       {props.allowAttachments && <FileUploadOverlay isDragging={isDragging} />}
     </div>
-  )
+  );
 }
-MessageInput.displayName = "MessageInput"
+MessageInput.displayName = "MessageInput";
 
 interface InterruptPromptProps {
-  isOpen: boolean
-  close: () => void
+  isOpen: boolean;
+  close: () => void;
 }
 
 function InterruptPrompt({ isOpen, close }: InterruptPromptProps) {
@@ -288,11 +288,11 @@ function InterruptPrompt({ isOpen, close }: InterruptPromptProps) {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
 interface FileUploadOverlayProps {
-  isDragging: boolean
+  isDragging: boolean;
 }
 
 function FileUploadOverlay({ isDragging }: FileUploadOverlayProps) {
@@ -312,27 +312,27 @@ function FileUploadOverlay({ isDragging }: FileUploadOverlayProps) {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
 function showFileUploadDialog() {
-  const input = document.createElement("input")
+  const input = document.createElement("input");
 
-  input.type = "file"
-  input.multiple = true
-  input.accept = "*/*"
-  input.click()
+  input.type = "file";
+  input.multiple = true;
+  input.accept = "*/*";
+  input.click();
 
   return new Promise<File[] | null>((resolve) => {
     input.onchange = (e) => {
-      const files = (e.currentTarget as HTMLInputElement).files
+      const files = (e.currentTarget as HTMLInputElement).files;
 
       if (files) {
-        resolve(Array.from(files))
-        return
+        resolve(Array.from(files));
+        return;
       }
 
-      resolve(null)
-    }
-  })
+      resolve(null);
+    };
+  });
 }
