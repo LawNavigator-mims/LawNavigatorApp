@@ -52,37 +52,37 @@ export default function LegalDisclaimer() {
                         <strong>Acceptance of Terms</strong>
                       </p>
                       <p>
-                        By accessing and using this website, users agree to
-                        comply with and be bound by these Terms of Service.
-                        Users who do not agree with these terms should
-                        discontinue use of the website immediately.
+                        By accessing and using Law Navigator, users acknowledge
+                        that the information provided is for educational and
+                        informational purposes only and does not constitute
+                        legal advice. Users who do not agree with this
+                        disclaimer should discontinue use of the app
+                        immediately.
                       </p>
                     </div>
 
                     <div className="space-y-1">
                       <p>
-                        <strong>User Account Responsibilities</strong>
+                        <strong>No Attorney-Client Relationships</strong>
                       </p>
                       <p>
-                        Users are responsible for maintaining the
-                        confidentiality of their account credentials. Any
-                        activities occurring under a user&lsquo;s account are
-                        the sole responsibility of the account holder. Users
-                        must notify the website administrators immediately of
-                        any unauthorized account access.
+                        Law Navigator does not establish an attorney-client
+                        relationship. The app does not provide personalized
+                        legal counsel. If you require legal assistance, please
+                        consult a qualified attorney.
                       </p>
                     </div>
 
                     <div className="space-y-1">
                       <p>
-                        <strong>Content Usage and Restrictions</strong>
+                        <strong>Information Accuracy and Limitations</strong>
                       </p>
                       <p>
-                        The website and its original content are protected by
-                        intellectual property laws. Users may not reproduce,
-                        distribute, modify, create derivative works, or
-                        commercially exploit any content without explicit
-                        written permission from the website owners.
+                        While Law Navigator strives to provide accurate and
+                        up-to-date legal information, laws vary by jurisdiction
+                        and may change over time. The app makes no guarantees
+                        about the accuracy, completeness, or applicability of
+                        its content to specific legal situations.
                       </p>
                     </div>
 
@@ -91,40 +91,35 @@ export default function LegalDisclaimer() {
                         <strong>Limitation of Liability</strong>
                       </p>
                       <p>
-                        The website provides content &ldquo;as is&ldquo; without
-                        any warranties. The website owners shall not be liable
-                        for direct, indirect, incidental, consequential, or
-                        punitive damages arising from user interactions with the
-                        platform.
+                        Law Navigator provides information “as is” without
+                        warranties of any kind. The app and its owners are not
+                        liable for any direct, indirect, incidental,
+                        consequential, or punitive damages arising from user
+                        interactions with the platform or reliance on its
+                        content.
                       </p>
                     </div>
 
                     <div className="space-y-1">
                       <p>
-                        <strong>User Conduct Guidelines</strong>
+                        <strong>User Responsibilities</strong>
                       </p>
                       <ul className="list-disc pl-6">
-                        <li>Not upload harmful or malicious content</li>
-                        <li>Respect the rights of other users</li>
                         <li>
-                          Avoid activities that could disrupt website
-                          functionality
+                          Users should verify legal information with official
+                          sources or legal professionals.
+                        </li>
+                        <li>
+                          The app is not a substitute for legal consultation.
+                        </li>
+                        <li>
+                          Users are responsible for their actions based on the
+                          information provided.
                         </li>
                         <li>
                           Comply with applicable local and international laws
                         </li>
                       </ul>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p>
-                        <strong>Modifications to Terms</strong>
-                      </p>
-                      <p>
-                        The website reserves the right to modify these terms at
-                        any time. Continued use of the website after changes
-                        constitutes acceptance of the new terms.
-                      </p>
                     </div>
 
                     <div className="space-y-1">
@@ -146,6 +141,13 @@ export default function LegalDisclaimer() {
                         These terms are governed by the laws of the jurisdiction
                         where the website is primarily operated, without regard
                         to conflict of law principles.
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p>
+                        For urgent legal matters, please contact a legal
+                        professional or your local legal aid services..
                       </p>
                     </div>
                   </div>
