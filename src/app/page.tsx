@@ -10,18 +10,9 @@ import { PromptSuggestions } from "@/components/ui/prompt-suggestions";
 import { ChatMessageProps, Message } from "@/components/ui/chat-message";
 import { MessageList } from "@/components/ui/message-list";
 
-type RetrievedDocs = {
-  title: string;
-  chapter: string;
-  section: string;
-  content: string;
-  filename: string;
-  page: number;
-};
-
 type QueryResponseType = {
   query: string;
-  retrieved_docs: RetrievedDocs[];
+  response: string;
 };
 
 export default function Home() {
@@ -80,7 +71,7 @@ export default function Home() {
         {
           id: String(parseInt(latestId) + 2),
           role: "assistant",
-          content: res.retrieved_docs[0]?.content ?? "Empty response",
+          content: res.response,
           createdAt: new Date(),
         },
       ]);
