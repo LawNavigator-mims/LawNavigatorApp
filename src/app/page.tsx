@@ -64,6 +64,7 @@ export default function Home() {
         body: JSON.stringify(obj),
       });
       const res = (await response.json()) as QueryResponseType;
+      console.log("Full API Response:", res.response);
 
       // Update chat
       setChats((prevChats) => [
