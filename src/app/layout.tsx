@@ -4,6 +4,7 @@ import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,9 @@ export default function RootLayout({
           <SidebarProvider>
             <AppSidebar />
             <main className="w-full max-h-screen overflow-y-scroll">
+              <header className="flex justify-end p-4">
+                <ModeToggle /> {/* Add the Mode Toggle button in the header */}
+              </header>
               <SidebarTrigger />
               {children}
             </main>

@@ -147,7 +147,7 @@ export default function LegalDisclaimer() {
                     <div className="space-y-1">
                       <p>
                         For urgent legal matters, please contact a legal
-                        professional or your local legal aid services..
+                        professional or your local legal aid services.
                       </p>
                     </div>
                   </div>
