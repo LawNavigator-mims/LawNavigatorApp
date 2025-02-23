@@ -40,11 +40,12 @@ export default function RootLayout({
         >
           <SidebarProvider>
             <AppSidebar />
-            <main className="w-full max-h-screen overflow-y-scroll">
-              <header className="flex justify-end p-4">
+            <main className="w-full max-h-screen overflow-hidden relative flex flex-col">
+              <header className="flex justify-between p-4 sticky">
+                <SidebarTrigger />
                 <ModeToggle /> {/* Add the Mode Toggle button in the header */}
               </header>
-              <SidebarTrigger />
+
               {children}
             </main>
           </SidebarProvider>

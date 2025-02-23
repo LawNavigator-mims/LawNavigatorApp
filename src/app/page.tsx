@@ -3,12 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { ChatForm } from "@/components/ui/chat";
 import { MessageInput } from "@/components/ui/message-input";
-import Image from "next/image";
-import Link from "next/link";
+// import Image from "next/image";
+// import Link from "next/link";
 import { useRef, useState } from "react";
 import { PromptSuggestions } from "@/components/ui/prompt-suggestions";
 import { ChatMessageProps, Message } from "@/components/ui/chat-message";
 import { MessageList } from "@/components/ui/message-list";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type QueryResponseType = {
   query: string;
@@ -83,51 +84,58 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full pb-20 pt-20 flex flex-col justify-between items-center px-12">
-      <div className="w-full">
-        {chats.length > 0 ? (
-          <MessageList isTyping={isGenerating} messages={chats} />
-        ) : (
-          <PromptSuggestions
-            label="Try one of these prompts!"
-            append={(message) => {
-              // toast(`Clicked on "${message.content}"`);
-            }}
-            suggestions={[
-              "Is a verbal contract legally binding?",
-              "How can I legally protect my small business?",
-              "How do I dispute a traffic ticket?.",
-            ]}
-          />
-        )}
+    <div className="w-full flex-1 pb-8 pt-20 flex flex-col justify-between items-center px-12">
+      <div className="w-full flex-1 flex-grow">
+        <ScrollArea className="w-full flex-grow">
+          {chats.length > 0 ? (
+            <MessageList isTyping={isGenerating} messages={chats} />
+          ) : (
+            <PromptSuggestions
+              label="Try one of these prompts!"
+              append={(message) => setValue(message.content)} // This will update the chat input
+              suggestions={[
+                "Is a verbal contract legally binding?",
+                "How can I legally protect my small business?",
+                "How do I dispute a traffic ticket?",
+              ]}
+            />
+          )}
+        </ScrollArea>
       </div>
-      <ChatForm
-        className="w-full"
-        isPending={false}
-        handleSubmit={async (event) => {
-          event?.preventDefault?.();
-          await onSubmit();
-        }}
-      >
-        {({ files, setFiles }) => (
-          <MessageInput
-            className="bg-muted"
-            value={value}
-            onChange={(event) => {
-              setValue(event.target.value);
-            }}
-            allowAttachments
-            files={files}
-            setFiles={setFiles}
-            stop={() => {
-              setIsGenerating(false);
-              cancelTimeout();
-            }}
-            isGenerating={isGenerating}
-            placeholder="Ask Law Navigator"
-          />
-        )}
-      </ChatForm>
+      <div className="w-full">
+        <ChatForm
+          className="w-full p-0 m-0 border-0"
+          isPending={false}
+          handleSubmit={async (event) => {
+            event?.preventDefault?.();
+            await onSubmit();
+          }}
+        >
+          {({ files, setFiles }) => (
+            <MessageInput
+              className="bg-muted"
+              value={value}
+              onChange={(event) => {
+                setValue(event.target.value);
+              }}
+              allowAttachments
+              files={files}
+              setFiles={setFiles}
+              stop={() => {
+                setIsGenerating(false);
+                cancelTimeout();
+              }}
+              isGenerating={isGenerating}
+              placeholder="Ask Law Navigator..."
+            />
+          )}
+        </ChatForm>
+
+        {/* Disclaimer at the bottom */}
+        <footer className="text-center p-2 text-sm text-black dark:text-white mt-4">
+          Law Navigator can make mistakes. Check important info.
+        </footer>
+      </div>
     </div>
   );
 }
