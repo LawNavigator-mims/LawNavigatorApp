@@ -1,13 +1,17 @@
-import { Search } from "lucide-react"
+import { Search } from "lucide-react";
 
-import { Label } from "@/components/ui/label"
+import { Label } from "@/components/ui/label";
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarInput,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { ChangeEvent } from "react";
+type SearchFormProps = React.ComponentProps<"form"> & {
+  handleInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
+};
 
-export function SearchForm({ ...props }: React.ComponentProps<"form">) {
+export function SearchForm({ handleInputChange, ...props }: SearchFormProps) {
   return (
     <form {...props}>
       <SidebarGroup className="py-0">
@@ -17,6 +21,7 @@ export function SearchForm({ ...props }: React.ComponentProps<"form">) {
           </Label>
           <SidebarInput
             id="search"
+            onChange={handleInputChange}
             placeholder="Search the docs..."
             className="pl-8"
           />
@@ -24,5 +29,5 @@ export function SearchForm({ ...props }: React.ComponentProps<"form">) {
         </SidebarGroupContent>
       </SidebarGroup>
     </form>
-  )
+  );
 }

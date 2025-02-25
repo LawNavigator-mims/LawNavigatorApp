@@ -84,8 +84,8 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full flex-1 pb-8 pt-20 flex flex-col justify-between items-center px-12">
-      <div className="w-full flex-1 flex-grow">
+    <div className="w-full h-full flex-1 pb-8 pt-20 flex flex-col justify-start items-center relative">
+      <div className="w-full flex-1 flex-grow pb-12 px-12">
         <ScrollArea className="w-full flex-grow">
           {chats.length > 0 ? (
             <MessageList isTyping={isGenerating} messages={chats} />
@@ -95,14 +95,14 @@ export default function Home() {
               append={(message) => setValue(message.content)} // This will update the chat input
               suggestions={[
                 "Is a verbal contract legally binding?",
-                "How can I legally protect my small business?",
+                "What are the key regulations on property tax in Sierra_Madre?",
                 "How do I dispute a traffic ticket?",
               ]}
             />
           )}
         </ScrollArea>
       </div>
-      <div className="w-full">
+      <div className="w-full sticky bottom-0 pt-2 bg-background px-12">
         <ChatForm
           className="w-full p-0 m-0 border-0"
           isPending={false}
@@ -118,9 +118,7 @@ export default function Home() {
               onChange={(event) => {
                 setValue(event.target.value);
               }}
-              allowAttachments
-              files={files}
-              setFiles={setFiles}
+              allowAttachments={false}
               stop={() => {
                 setIsGenerating(false);
                 cancelTimeout();

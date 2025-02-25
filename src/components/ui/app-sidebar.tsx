@@ -1,4 +1,8 @@
+"use client";
 import * as React from "react";
+import { useState, ChangeEvent } from "react";
+import { sidebarItems, SidebarItem } from "@/components/ui/sidebaritems";
+// ...
 import {
   ChevronUp,
   GalleryVerticalEnd,
@@ -41,6 +45,54 @@ import LegalDisclaimer from "../disclaimer";
 
 // This is sample data.
 const data = {
+  staticContent: [
+    {
+      title: "Getting Started",
+      url: "#",
+      items: [
+        {
+          title: "How To Use Law Navigator",
+          url: "#",
+        },
+        {
+          title: "Legal Topics Overview",
+          url: "#",
+        },
+      ],
+    },
+  ],
+
+  queries: {
+    title: "Previous Queries",
+    url: "#",
+    items: [
+      {
+        title: "What are the legal requirements for writing a will?",
+        url: "#",
+      },
+      {
+        title: "Where can I find a template for a rental agreement?",
+        url: "#",
+      },
+      {
+        title: "How do I legally change my name?",
+        url: "#",
+      },
+      {
+        title: "How do I file a discrimination complaint?",
+        url: "#",
+      },
+      {
+        title: "What should I do if I am falsely accused of a crime?",
+        url: "#",
+      },
+      {
+        title: "How do I find a public defender?",
+        url: "#",
+      },
+    ],
+  },
+
   navMain: [
     {
       title: "Getting Started",
@@ -89,7 +141,58 @@ const data = {
   ],
 };
 
+export default function SidebarSearch() {
+  const [query, setQuery] = useState("");
+
+  const filteredItems: SidebarItem[] = sidebarItems.filter(
+    (item: SidebarItem) =>
+      item.title.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search the docs..."
+        value={query}
+        onChange={handleInputChange}
+        className="p-2 border rounded w-full"
+      />
+
+      {query && (
+        <ul className="mt-2 bg-white shadow p-2 rounded">
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
+              <li key={item.link} className="py-1">
+                <a href={item.link} className="hover:underline">
+                  {item.title}
+                </a>
+              </li>
+            ))
+          ) : (
+            <li>No results found</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [query, setQuery] = useState("");
+
+  const filteredItems = data.queries.items.filter((item) =>
+    item.title.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  };
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -108,12 +211,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SearchForm />
+        <SearchForm handleInputChange={handleInputChange} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {data.navMain.map((item, index) => (
+            {data.staticContent.map((item, index) => (
               <Collapsible
                 key={item.title}
                 defaultOpen={index === 1}
@@ -146,6 +249,39 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenuItem>
               </Collapsible>
             ))}
+          </SidebarMenu>
+          <SidebarMenu>
+            <Collapsible
+              key={data.queries.title}
+              defaultOpen={true}
+              className="group/collapsible"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton>
+                    {data.queries.title}{" "}
+                    <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
+                    <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                {filteredItems?.length ? (
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {filteredItems.map((item) => (
+                        <SidebarMenuSubItem
+                          key={item.title}
+                          className="truncate"
+                        >
+                          <SidebarMenuSubButton asChild>
+                            <span>{item.title}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                ) : null}
+              </SidebarMenuItem>
+            </Collapsible>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
