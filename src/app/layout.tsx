@@ -40,8 +40,8 @@ export default function RootLayout({
         >
           <SidebarProvider>
             <AppSidebar />
-            <main className="w-full max-h-screen overflow-hidden relative flex flex-col">
-              <header className="flex justify-between p-4 sticky">
+            <main className="w-full max-h-screen relative flex flex-col">
+              <header className="flex justify-between p-4 sticky top-0 bg-background z-50">
                 <SidebarTrigger />
                 <ModeToggle /> {/* Add the Mode Toggle button in the header */}
               </header>

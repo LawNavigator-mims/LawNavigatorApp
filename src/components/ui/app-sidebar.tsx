@@ -1,8 +1,7 @@
 "use client";
 import * as React from "react";
 import { useState, ChangeEvent } from "react";
-import { sidebarItems, SidebarItem } from "@/components/ui/sidebaritems";
-// ...
+
 import {
   ChevronUp,
   GalleryVerticalEnd,
@@ -92,95 +91,7 @@ const data = {
       },
     ],
   },
-
-  navMain: [
-    {
-      title: "Getting Started",
-      url: "#",
-      items: [
-        {
-          title: "How To Use Law Navigator",
-          url: "#",
-        },
-        {
-          title: "Legal Topics Overview",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Previous Queries",
-      url: "#",
-      items: [
-        {
-          title: "What are the legal requirements for writing a will?",
-          url: "#",
-        },
-        {
-          title: "Where can I find a template for a rental agreement?",
-          url: "#",
-        },
-        {
-          title: "How do I legally change my name?",
-          url: "#",
-        },
-        {
-          title: "How do I file a discrimination complaint?",
-          url: "#",
-        },
-        {
-          title: "What should I do if I am falsely accused of a crime?",
-          url: "#",
-        },
-        {
-          title: "How do I find a public defender?",
-          url: "#",
-        },
-      ],
-    },
-  ],
 };
-
-export default function SidebarSearch() {
-  const [query, setQuery] = useState("");
-
-  const filteredItems: SidebarItem[] = sidebarItems.filter(
-    (item: SidebarItem) =>
-      item.title.toLowerCase().includes(query.toLowerCase())
-  );
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  };
-
-  return (
-    <div>
-      <input
-        type="text"
-        placeholder="Search the docs..."
-        value={query}
-        onChange={handleInputChange}
-        className="p-2 border rounded w-full"
-      />
-
-      {query && (
-        <ul className="mt-2 bg-white shadow p-2 rounded">
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <li key={item.link} className="py-1">
-                <a href={item.link} className="hover:underline">
-                  {item.title}
-                </a>
-              </li>
-            ))
-          ) : (
-            <li>No results found</li>
-          )}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [query, setQuery] = useState("");

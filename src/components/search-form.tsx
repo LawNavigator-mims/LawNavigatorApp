@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { ChangeEvent } from "react";
 type SearchFormProps = React.ComponentProps<"form"> & {
-  handleInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  handleInputChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 };
 
 export function SearchForm({ handleInputChange, ...props }: SearchFormProps) {
@@ -22,7 +22,7 @@ export function SearchForm({ handleInputChange, ...props }: SearchFormProps) {
           <SidebarInput
             id="search"
             onChange={handleInputChange}
-            placeholder="Search the docs..."
+            placeholder="Search previous queries..."
             className="pl-8"
           />
           <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 select-none opacity-50" />
