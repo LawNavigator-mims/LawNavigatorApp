@@ -41,6 +41,7 @@ import {
 } from "./dropdown-menu";
 import { Button } from "./button";
 import LegalDisclaimer from "../disclaimer";
+import Onboarding from "../onboarding";
 
 // This is sample data.
 const data = {
@@ -141,22 +142,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
-                  {item.items?.length ? (
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items.map((item) => (
-                          <SidebarMenuSubItem
-                            key={item.title}
-                            className="truncate"
-                          >
-                            <SidebarMenuSubButton asChild>
-                              <span>{item.title}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  ) : null}
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem className="truncate">
+                        <Onboarding></Onboarding>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem className="truncate">
+                        <SidebarMenuSubButton asChild>
+                          <span>Legal Topics Overview</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
             ))}
