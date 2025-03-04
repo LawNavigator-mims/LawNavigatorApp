@@ -38,7 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider defaultOpen={true}>
+          <SidebarProvider defaultOpen={false}>
             <AppSidebar />
             <main className="w-full max-h-screen relative flex flex-col">
               <header className="flex justify-between p-4 sticky top-0 bg-background z-50">
