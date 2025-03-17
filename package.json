@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.2.5",
+    "@ai-sdk/openai-compatible": "^0.1.15",
+    "@ai-sdk/react": "^1.1.23",
+    "@huggingface/transformers": "^3.4.0",
     "@radix-ui/react-collapsible": "^1.1.3",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
@@ -17,17 +21,23 @@
     "@radix-ui/react-separator": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@supabase/supabase-js": "^2.49.1",
+    "@xenova/transformers": "^2.17.2",
+    "ai": "^4.1.61",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "next-themes": "^0.4.4",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.3",
     "remark-gfm": "^4.0.1",
     "remeda": "^2.20.1",
+    "sharp": "0.33.5",
     "shiki": "^2.3.2",
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.0.1",
@@ -43,5 +53,11 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "onnxruntime-node": "1.21.0",
+    "@xenova/transformers": {
+      "sharp": "^0.33.5"
+    }
   }
 }
