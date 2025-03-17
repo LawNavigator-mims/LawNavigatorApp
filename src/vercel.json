@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/chat": {
+      "runtime": "edge"
+    }
+  },
+  "ignoreCommand": "rm -rf node_modules/onnxruntime-node node_modules/sharp"
+}
