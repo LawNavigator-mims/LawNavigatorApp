@@ -1,3 +1,7 @@
+export const config = {
+  runtime: "edge", // ✅ Keep this for Edge Functions
+};
+
 import { createClient } from "@supabase/supabase-js";
 import EmbeddingsPipeline from "./pipeline";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
@@ -12,13 +16,6 @@ type DocumentResult = {
   filename: string;
   page: string;
   similarity: number;
-};
-
-type MatchDocumentsArgs = {
-  query_embedding: number[];
-  match_threshold: number;
-  match_count: number;
-  // add other parameters your RPC function expects
 };
 
 const provider = createOpenAICompatible({
@@ -44,22 +41,18 @@ async function searchDocuments(query: string, top_k = 10) {
   };
   const { data, error } = await supabase.rpc("match_documents", args);
   const typedData = data as DocumentResult[];
-  const results = typedData.map((row) => {
-    return {
-      title: row["title"],
-      chapter: row["chapter"],
-      section: row["section"],
-      content: row["content"],
-      filename: row["filename"],
-      page: row["page"],
-    };
-  });
-  return results;
+  return typedData.map((row) => ({
+    title: row["title"],
+    chapter: row["chapter"],
+    section: row["section"],
+    content: row["content"],
+    filename: row["filename"],
+    page: row["page"],
+  }));
 }
+
 async function generateResponse(query: string) {
   const retrievedDocs = await searchDocuments(query);
-
-  // Join the content strings and limit to 1500 characters
   const context = retrievedDocs
     .map((doc) => doc.content)
     .join("\n")
@@ -81,18 +74,18 @@ Question: ${query}
 Answer:
 `;
 
-  const results = streamText({
-    model: provider("llama3.1-70b"),
-    prompt: prompt,
-  });
-
-  return results;
+  return streamText({ model: provider("llama3.1-70b"), prompt: prompt });
 }
 
+// ✅ Corrected Next.js App Router API Format
 export async function POST(request: Request) {
-  const { messages, id } = await request.json();
-
-  const stream = await generateResponse(messages[0].content);
-
-  return stream.toDataStreamResponse();
+  try {
+    const { messages } = await request.json();
+    const stream = await generateResponse(messages[0].content);
+    return stream.toDataStreamResponse();
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+    });
+  }
 }
