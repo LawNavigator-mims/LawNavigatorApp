@@ -29,7 +29,7 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY ?? ""
 );
 
-async function searchDocuments(query: string, top_k = 10) {
+async function searchDocuments(query: string) {
   const model = await EmbeddingsPipeline.getInstance();
   const vector = await model(query, { pooling: "mean", normalize: true });
   const tensorData = vector[0].ort_tensor.cpuData;
@@ -39,7 +39,7 @@ async function searchDocuments(query: string, top_k = 10) {
     match_threshold: 0.5,
     match_count: 100,
   };
-  const { data, error } = await supabase.rpc("match_documents", args);
+  const { data } = await supabase.rpc("match_documents", args);
   const typedData = data as DocumentResult[];
   return typedData.map((row) => ({
     title: row["title"],
@@ -84,7 +84,8 @@ export async function POST(request: Request) {
     const stream = await generateResponse(messages[0].content);
     return stream.toDataStreamResponse();
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const err = error as Error; // ✅ Explicitly cast error as an Error
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
     });
   }
