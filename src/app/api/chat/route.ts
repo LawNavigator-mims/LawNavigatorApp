@@ -80,14 +80,14 @@ Answer:
   return streamText({ model: provider("llama3.1-70b"), prompt: prompt });
 }
 
-// ✅ Corrected Next.js App Router API Format
 export async function POST(request: Request) {
   try {
     const { messages } = await request.json();
-    const stream = await generateResponse(messages[0].content);
+    const lastMessage = messages.length > 0 ? messages.length - 1 : 0;
+    const stream = await generateResponse(messages[lastMessage].content);
     return stream.toDataStreamResponse();
   } catch (error) {
-    const err = error as Error; // ✅ Explicitly cast error as an Error
+    const err = error as Error;
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
     });
