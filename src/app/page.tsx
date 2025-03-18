@@ -53,7 +53,7 @@ export default function Home() {
           isPending={isLoading || isTyping}
           handleSubmit={handleSubmit}
         >
-          {({ files, setFiles }) => (
+          {() => (
             <MessageInput
               className="bg-muted"
               value={input}

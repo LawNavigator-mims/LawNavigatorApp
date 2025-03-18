@@ -1,9 +1,4 @@
-export const config = {
-  runtime: "edge", // ✅ Keep this for Edge Functions
-};
-
 import { createClient } from "@supabase/supabase-js";
-import EmbeddingsPipeline from "./pipeline";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { streamText } from "ai";
 
@@ -18,6 +13,10 @@ type DocumentResult = {
   similarity: number;
 };
 
+type EmbeddingResult = {
+  embedding: { [key: string]: number };
+};
+
 const provider = createOpenAICompatible({
   name: "LLAMA-API",
   baseURL: "https://api.llama-api.com",
@@ -30,10 +29,14 @@ const supabase = createClient(
 );
 
 async function searchDocuments(query: string) {
-  const model = await EmbeddingsPipeline.getInstance();
-  const vector = await model(query, { pooling: "mean", normalize: true });
-  const tensorData = vector[0].ort_tensor.cpuData;
-  const embedding = Array.from(tensorData.slice(0, 384));
+  const { data: embeddingData } = await supabase.functions.invoke(
+    "generate-embeddings",
+    {
+      body: { input: query },
+    }
+  );
+  const embeddingResult = embeddingData as EmbeddingResult;
+  const embedding = Array.from(Object.values(embeddingResult.embedding));
   const args = {
     query_embedding: embedding,
     match_threshold: 0.5,
