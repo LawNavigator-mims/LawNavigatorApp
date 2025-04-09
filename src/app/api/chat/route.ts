@@ -3,13 +3,14 @@ import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { streamText } from "ai";
 
 type DocumentResult = {
-  id: number;
+  id: string;
   title: string;
   chapter: string;
   section: string;
   content: string;
   filename: string;
   page: string;
+  county: string;
   similarity: number;
 };
 
@@ -35,22 +36,38 @@ async function searchDocuments(query: string) {
       body: { input: query },
     }
   );
+
+
   const embeddingResult = embeddingData as EmbeddingResult;
   const embedding = Array.from(Object.values(embeddingResult.embedding));
+  // const args = {
+  //   query_embedding: embedding,
+  //   match_threshold: 0.5,
+  //   match_count: 100,
+  // };
   const args = {
     query_embedding: embedding,
     match_threshold: 0.5,
     match_count: 100,
+    county_name: ""  // ← placeholder for when we add county filtering to the UI
   };
-  const { data } = await supabase.rpc("match_documents", args);
+  
+  const { data, error } = await supabase.rpc("match_chunks_bge", args);
+  if (error) {
+    console.error("Supabase RPC error:", error.message);
+    return [];
+  }
+    
   const typedData = data as DocumentResult[];
   return typedData.map((row) => ({
-    title: row["title"],
-    chapter: row["chapter"],
-    section: row["section"],
-    content: row["content"],
-    filename: row["filename"],
-    page: row["page"],
+    title: row.title,
+    chapter: row.chapter,
+    section: row.section,
+    content: row.content,
+    filename: row.filename,
+    page: row.page,
+    county: row.county,
+    similarity: row.similarity,
   }));
 }
 
