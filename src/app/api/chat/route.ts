@@ -49,13 +49,13 @@ async function searchDocuments(query: string) {
     query_embedding: embedding,
     match_threshold: 0.5,
     match_count: 100,
-    county_name: ""  // ← placeholder for when we add county filtering to the UI
+    // county_name: ""  // ← placeholder for when we add county filtering to the UI
   };
   
-  const { data, error } = await supabase.rpc("match_chunks_bge", args);
+  const { data, error } = await supabase.rpc("match_documents", args);
   if (error) {
     console.error("Supabase RPC error:", error.message);
-    return [];
+    throw new Error("Could not find relevant documents");
   }
     
   const typedData = data as DocumentResult[];
