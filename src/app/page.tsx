@@ -238,7 +238,7 @@ export default function HomePage() {
         },
         body: JSON.stringify({
           messages: [{ role: "user", content: userInput }],
-          county: selectedCounty, // Send the selected county
+          county: selectedCounty,
         }),
       });
 
@@ -257,7 +257,6 @@ export default function HomePage() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let result = "";
-
       streamContentRef.current = "";
 
       while (true) {
@@ -266,31 +265,38 @@ export default function HomePage() {
 
         // Decode the chunk
         const chunk = decoder.decode(value);
-        console.log("📥 RAW CHUNK:", chunk);
 
-        // Parse AI SDK stream format
+        // Parse AI SDK stream format more robustly
         const lines = chunk.split("\n").filter((line) => line.trim() !== "");
 
         for (const line of lines) {
-          if (line.startsWith("0:")) {
-            // This is a text chunk from AI SDK
-            const content = line.substring(2).trim();
+          // Handle different AI SDK stream formats
+          if (line.startsWith("0:") || line.startsWith("2:")) {
+            // Extract content from the stream
+            let content = line.substring(2).trim();
 
-            // Remove quotes if present
-            const unquotedContent = content.replace(/^"|"$/g, "");
+            // Parse JSON if necessary
+            try {
+              const parsedContent = JSON.parse(content);
+              if (parsedContent.content) {
+                content = parsedContent.content;
+              }
+            } catch {
+              // If not JSON, use content as is
+            }
 
-            // Handle escaped characters for plain text formatting
-            const decodedContent = unquotedContent
-              .replace(/\\n/g, " ") // Replace newlines with spaces
-              .replace(/\\r/g, "") // Remove carriage returns
-              .replace(/\\t/g, " ") // Replace tabs with spaces
-              .replace(/\\"/g, '"') // Unescape quotes
-              .replace(/\\'/g, "'") // Unescape single quotes
-              .replace(/\\\\/g, "\\") // Unescape backslashes
-              .replace(/\s+/g, " "); // Normalize multiple spaces
+            // Remove quotes and unescape characters
+            content = content
+              .replace(/^"|"$/g, "")
+              .replace(/\\n/g, "\n")
+              .replace(/\\r/g, "")
+              .replace(/\\t/g, "\t")
+              .replace(/\\"/g, '"')
+              .replace(/\\'/g, "'")
+              .replace(/\\\\/g, "\\");
 
-            streamContentRef.current += decodedContent;
-            result += decodedContent;
+            streamContentRef.current += content;
+            result += content;
 
             // Update message content
             setMessages((prev) =>

@@ -257,9 +257,14 @@ async function generateResponse(query: string, county?: string) {
 
 // 🔹 POST handler
 export async function POST(request: Request) {
-  const { messages, county } = await request.json();
-  const query = messages[messages.length - 1]?.content || "";
-  const result = await generateResponse(query, county);
+  try {
+    const { messages, county } = await request.json();
+    const query = messages[messages.length - 1]?.content || "";
 
-  return result.toDataStreamResponse();
+    const result = await generateResponse(query, county);
+    return result.toDataStreamResponse();
+  } catch (error) {
+    console.error("Error in chat route:", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
 }
