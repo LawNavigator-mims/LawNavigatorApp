@@ -27,8 +27,72 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY ?? ""
 );
 
-// 🔹 Search legal documents
-async function searchDocuments(query: string) {
+// Map of county values to their full names
+const CALIFORNIA_COUNTIES = [
+  { value: "alameda", label: "Alameda County" },
+  { value: "alpine", label: "Alpine County" },
+  { value: "amador", label: "Amador County" },
+  { value: "butte", label: "Butte County" },
+  { value: "calaveras", label: "Calaveras County" },
+  { value: "colusa", label: "Colusa County" },
+  { value: "contra-costa", label: "Contra Costa County" },
+  { value: "del-norte", label: "Del Norte County" },
+  { value: "el-dorado", label: "El Dorado County" },
+  { value: "fresno", label: "Fresno County" },
+  { value: "glenn", label: "Glenn County" },
+  { value: "humboldt", label: "Humboldt County" },
+  { value: "imperial", label: "Imperial County" },
+  { value: "inyo", label: "Inyo County" },
+  { value: "kern", label: "Kern County" },
+  { value: "kings", label: "Kings County" },
+  { value: "lake", label: "Lake County" },
+  { value: "lassen", label: "Lassen County" },
+  { value: "los-angeles", label: "Los Angeles County" },
+  { value: "madera", label: "Madera County" },
+  { value: "marin", label: "Marin County" },
+  { value: "mariposa", label: "Mariposa County" },
+  { value: "mendocino", label: "Mendocino County" },
+  { value: "merced", label: "Merced County" },
+  { value: "modoc", label: "Modoc County" },
+  { value: "mono", label: "Mono County" },
+  { value: "monterey", label: "Monterey County" },
+  { value: "napa", label: "Napa County" },
+  { value: "nevada", label: "Nevada County" },
+  { value: "orange", label: "Orange County" },
+  { value: "placer", label: "Placer County" },
+  { value: "plumas", label: "Plumas County" },
+  { value: "riverside", label: "Riverside County" },
+  { value: "sacramento", label: "Sacramento County" },
+  { value: "san-benito", label: "San Benito County" },
+  { value: "san-bernardino", label: "San Bernardino County" },
+  { value: "san-diego", label: "San Diego County" },
+  { value: "san-francisco", label: "San Francisco County" },
+  { value: "san-joaquin", label: "San Joaquin County" },
+  { value: "san-luis-obispo", label: "San Luis Obispo County" },
+  { value: "san-mateo", label: "San Mateo County" },
+  { value: "santa-barbara", label: "Santa Barbara County" },
+  { value: "santa-clara", label: "Santa Clara County" },
+  { value: "santa-cruz", label: "Santa Cruz County" },
+  { value: "shasta", label: "Shasta County" },
+  { value: "sierra", label: "Sierra County" },
+  { value: "siskiyou", label: "Siskiyou County" },
+  { value: "solano", label: "Solano County" },
+  { value: "sonoma", label: "Sonoma County" },
+  { value: "stanislaus", label: "Stanislaus County" },
+  { value: "sutter", label: "Sutter County" },
+  { value: "tehama", label: "Tehama County" },
+  { value: "trinity", label: "Trinity County" },
+  { value: "tulare", label: "Tulare County" },
+  { value: "tuolumne", label: "Tuolumne County" },
+  { value: "ventura", label: "Ventura County" },
+  { value: "yolo", label: "Yolo County" },
+  { value: "yuba", label: "Yuba County" },
+  { value: "sierra-madre", label: "Sierra Madre" },
+];
+
+async function searchDocuments(query: string, county?: string) {
+  console.log("Searching for:", query, "in county:", county);
+
   const { data: embeddingData } = await supabase.functions.invoke(
     "generate-embeddings",
     {
@@ -51,20 +115,81 @@ async function searchDocuments(query: string) {
   }
 
   const typedData = data as DocumentResult[];
-  return typedData
+
+  // Filter documents by county if provided
+  const filteredDocs = county
+    ? typedData.filter((row) => {
+        // More flexible county matching
+        const docCounty = row.county?.toLowerCase() || "";
+        const searchCounty = county.toLowerCase();
+
+        // Check if document county includes search county or vice versa
+        return (
+          docCounty.includes(searchCounty) || searchCounty.includes(docCounty)
+        );
+      })
+    : typedData;
+
+  console.log(`Found ${filteredDocs.length} documents for ${county}`);
+
+  // If no documents found for the specific county, return empty string
+  if (filteredDocs.length === 0) {
+    return "";
+  }
+
+  return filteredDocs
+    .slice(0, 10) // Limit to top 10 most relevant documents
     .map((row) => row.content)
     .join("\n")
-    .slice(0, 1500);
+    .slice(0, 2000); // Increased from 1500 to 2000 for more context
 }
 
-// 🔹 Build Claude prompt
-function buildPrompt(query: string, context: string): string {
+function buildPrompt(query: string, context: string, county?: string): string {
+  let selectedCounty = "unspecified jurisdiction";
+
+  if (county) {
+    const countyInfo = CALIFORNIA_COUNTIES.find((j) => j.value === county);
+    selectedCounty = countyInfo ? countyInfo.label : "unspecified jurisdiction";
+  }
+
+  // Check if the query is a greeting
+  const greetings = [
+    "hi",
+    "hello",
+    "hey",
+    "greetings",
+    "good morning",
+    "good afternoon",
+    "good evening",
+  ];
+  const isGreeting = greetings.some(
+    (greeting) =>
+      query.toLowerCase().trim() === greeting ||
+      query.toLowerCase().trim() === `${greeting}!` ||
+      query.toLowerCase().includes(`${greeting} in `)
+  );
+
+  if (isGreeting) {
+    return `You are a friendly legal research assistant.
+
+The user has sent a greeting. Please respond with a polite greeting and offer help with legal information about ${selectedCounty}.
+
+Respond with something like: "Hi! How can I help you with legal information about ${selectedCounty} today?"
+
+Keep the response brief and friendly.
+`;
+  }
+
   return `
+
 You are a legal research assistant specializing in California county-level laws.
 
-## SUPPORTED JURISDICTIONS
-This system ONLY supports the following jurisdictions:
+## CURRENT JURISDICTION
+The user has selected: ${selectedCounty}
+You should only provide information relevant to this jurisdiction.
 
+## SUPPORTED JURISDICTIONS
+This system currently has legal documents for:
 - Sierra Madre (City)
 - Amador County California  
 - Yuba County  
@@ -82,54 +207,23 @@ This system ONLY supports the following jurisdictions:
 - San Diego  
 - San Bernardino 
 
+Start with a Yes / No / Unclear summary line before diving into details.
+
 ## QUERY CLASSIFICATION
-First, analyze the user's question and determine if it needs clarification:
-
-1. If the question is MISSING LOCATION information:
-   → Respond: "Please include your city or county jurisdiction and resubmit your question."
-
-2. If the question is about STATE/FEDERAL-LEVEL laws:
-   → Respond: "This system handles only local (county/city) laws. Please consult your state or federal agency."
-
-3. If the question asks for LEGAL ADVICE, OUTCOME PREDICTION, or LIABILITY ASSESSMENT:
-   → Respond: "This system cannot provide legal advice or predict outcomes. Please consult an attorney."
-
-4. If the question is VAGUE or SUBJECTIVE:
-   → Respond: "Could you clarify the activity and location? Please rephrase your question with more detail."
-
-5. If the question is about a location OUTSIDE SUPPORTED JURISDICTIONS:
-   → Respond: "This system currently supports Alameda, Calaveras, and Sierra Madre only. Please resubmit your question using one of these locations."
-
-## HANDLING MISSING CONTEXT
-If no context is provided or context is empty:
-   → Respond: "I'm sorry but I could not find any related documents to your query."
+1. If no relevant documents are found in the context for the selected county:
+   → Respond: "I'm sorry but I could not find any related documents about ${query} in ${selectedCounty}. Please try a different topic or query."
 
 ## RESPONSE GUIDELINES
-If the question is valid, does not need clarification, and context is provided, then:
+If the question is valid and context is provided for a supported jurisdiction, then provide a single continuous paragraph response:
 
-1. Start with a 2-3 sentence factual summary addressing only what the documents support.
+1. Write a clear, factual paragraph that addresses only what the documents support.
 
-2. Then list bullet-point regulations including:
-   - A plain-language summary of each rule
-   - A source citation in this format: [Source: Alameda County, Title X, Chapter Y, Section Z]
+2. Include relevant information with source citations integrated naturally into the paragraph using this format: [Source: ${selectedCounty}, Title X, Chapter Y, Section Z]
 
-3. If no information is available in the provided context, explain the reason and state:
-   "Unfortunately, I don't have the necessary documents to assist you in your request. Please ask about a different topic or jurisdiction."
+3. Do not use headings, bullet points, lists, or any markdown formatting.
 
-4. IMPORTANT: Do not speculate, generalize, or mention unrelated jurisdictions or federal/state law.
+4. Return only the answer as a plain text paragraph. Do not include system notes or commentary.
 
-5. Return only the answer. Do not include system notes or commentary.
-
-6. All responses must be formatted as correct succinct markdown. 
-
-7. FORMAT GUIDELINES:
-   - Use proper markdown formatting for all responses
-   - Use headers (## or ###) for main sections
-   - Ensure bullet points are properly formatted with spaces after the bullet character
-   - Include appropriate line breaks between sections
-   - Use bold formatting (**text**) for important terms or concepts
-   - Maintain consistent indentation for nested lists
-   - Use proper markdown citation format for sources
 ---
 
 ## Context (retrieved legal text):
@@ -140,10 +234,10 @@ ${query}
 `;
 }
 
-// 🔹 Claude generation (no streaming)
-async function generateResponse(query: string) {
-  const context = await searchDocuments(query);
-  const prompt = buildPrompt(query, context);
+// 🔹 Claude generation
+async function generateResponse(query: string, county?: string) {
+  const context = await searchDocuments(query, county);
+  const prompt = buildPrompt(query, context, county);
 
   return streamText({
     model: anthropic("claude-3-opus-20240229"),
@@ -154,9 +248,9 @@ async function generateResponse(query: string) {
 
 // 🔹 POST handler
 export async function POST(request: Request) {
-  const { messages } = await request.json();
+  const { messages, county } = await request.json();
   const query = messages[messages.length - 1]?.content || "";
-  const result = await generateResponse(query);
+  const result = await generateResponse(query, county);
 
   return result.toDataStreamResponse();
 }

@@ -1,48 +1,372 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { ChatForm } from "@/components/ui/chat";
 import { MessageInput } from "@/components/ui/message-input";
 import { PromptSuggestions } from "@/components/ui/prompt-suggestions";
 import { MessageList } from "@/components/ui/message-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChat } from "@ai-sdk/react";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function Home() {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    stop,
-    append,
-  } = useChat({
-    api: "/api/chat",
-  });
+// Match the expected type for MessageList and PromptSuggestions
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+};
 
-  const lastMessage = messages.at(-1);
+const CALIFORNIA_COUNTIES = [
+  { value: "alameda", label: "Alameda County" },
+  { value: "alpine", label: "Alpine County" },
+  { value: "amador", label: "Amador County" },
+  { value: "butte", label: "Butte County" },
+  { value: "calaveras", label: "Calaveras County" },
+  { value: "colusa", label: "Colusa County" },
+  { value: "contra-costa", label: "Contra Costa County" },
+  { value: "del-norte", label: "Del Norte County" },
+  { value: "el-dorado", label: "El Dorado County" },
+  { value: "fresno", label: "Fresno County" },
+  { value: "glenn", label: "Glenn County" },
+  { value: "humboldt", label: "Humboldt County" },
+  { value: "imperial", label: "Imperial County" },
+  { value: "inyo", label: "Inyo County" },
+  { value: "kern", label: "Kern County" },
+  { value: "kings", label: "Kings County" },
+  { value: "lake", label: "Lake County" },
+  { value: "lassen", label: "Lassen County" },
+  { value: "los-angeles", label: "Los Angeles County" },
+  { value: "madera", label: "Madera County" },
+  { value: "marin", label: "Marin County" },
+  { value: "mariposa", label: "Mariposa County" },
+  { value: "mendocino", label: "Mendocino County" },
+  { value: "merced", label: "Merced County" },
+  { value: "modoc", label: "Modoc County" },
+  { value: "mono", label: "Mono County" },
+  { value: "monterey", label: "Monterey County" },
+  { value: "napa", label: "Napa County" },
+  { value: "nevada", label: "Nevada County" },
+  { value: "orange", label: "Orange County" },
+  { value: "placer", label: "Placer County" },
+  { value: "plumas", label: "Plumas County" },
+  { value: "riverside", label: "Riverside County" },
+  { value: "sacramento", label: "Sacramento County" },
+  { value: "san-benito", label: "San Benito County" },
+  { value: "san-bernardino", label: "San Bernardino County" },
+  { value: "san-diego", label: "San Diego County" },
+  { value: "san-francisco", label: "San Francisco County" },
+  { value: "san-joaquin", label: "San Joaquin County" },
+  { value: "san-luis-obispo", label: "San Luis Obispo County" },
+  { value: "san-mateo", label: "San Mateo County" },
+  { value: "santa-barbara", label: "Santa Barbara County" },
+  { value: "santa-clara", label: "Santa Clara County" },
+  { value: "santa-cruz", label: "Santa Cruz County" },
+  { value: "shasta", label: "Shasta County" },
+  { value: "sierra", label: "Sierra County" },
+  { value: "siskiyou", label: "Siskiyou County" },
+  { value: "solano", label: "Solano County" },
+  { value: "sonoma", label: "Sonoma County" },
+  { value: "stanislaus", label: "Stanislaus County" },
+  { value: "sutter", label: "Sutter County" },
+  { value: "tehama", label: "Tehama County" },
+  { value: "trinity", label: "Trinity County" },
+  { value: "tulare", label: "Tulare County" },
+  { value: "tuolumne", label: "Tuolumne County" },
+  { value: "ventura", label: "Ventura County" },
+  { value: "yolo", label: "Yolo County" },
+  { value: "yuba", label: "Yuba County" },
+  { value: "sierra-madre", label: "Sierra Madre (City)" },
+];
+
+export default function HomePage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState<string>("");
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [selectedCounty, setSelectedCounty] = useState<string>("");
+
+  const streamContentRef = useRef("");
+  const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const assistantMessageIdRef = useRef<string>("");
+
   const isEmpty = messages.length === 0;
-  const isTyping = lastMessage?.role === "user";
+
+  // Load conversation history from localStorage
+  useEffect(() => {
+    const savedMessages = localStorage.getItem("law-navigator-history");
+    const savedCounty = localStorage.getItem("law-navigator-county");
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+    if (savedCounty) {
+      setSelectedCounty(savedCounty);
+    }
+  }, []);
+
+  // Save conversation history to localStorage
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem("law-navigator-history", JSON.stringify(messages));
+    }
+    if (selectedCounty) {
+      localStorage.setItem("law-navigator-county", selectedCounty);
+    }
+  }, [messages, selectedCounty]);
+
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const append = (message: { role: "user"; content: string }) => {
+    setInput(message.content);
+  };
+
+  const handleCountyChange = (newCounty: string) => {
+    if (newCounty !== selectedCounty) {
+      // Clear messages when changing counties
+      setMessages([]);
+      localStorage.removeItem("law-navigator-history");
+      setSelectedCounty(newCounty);
+    }
+  };
+
+  const handleSubmit = async (_?: { preventDefault?: () => void }) => {
+    _?.preventDefault?.();
+
+    if (!input.trim()) return;
+
+    if (!selectedCounty) {
+      alert("Please select a jurisdiction first.");
+      return;
+    }
+
+    // Check if the input is a greeting
+    const greetings = [
+      "hi",
+      "hello",
+      "hey",
+      "greetings",
+      "good morning",
+      "good afternoon",
+      "good evening",
+    ];
+    const isGreeting = greetings.some(
+      (greeting) =>
+        input.toLowerCase().trim() === greeting ||
+        input.toLowerCase().trim() === `${greeting}!`
+    );
+
+    if (isGreeting) {
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: input,
+      };
+
+      const assistantMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: `Hi! How can I help you with legal information about ${
+          CALIFORNIA_COUNTIES.find((j) => j.value === selectedCounty)?.label
+        } today?`,
+      };
+
+      setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      setInput("");
+      return;
+    }
+
+    // Automatically append the selected county to the query
+    const countyLabel = CALIFORNIA_COUNTIES.find(
+      (j) => j.value === selectedCounty
+    )?.label;
+    const queryWithCounty = `${input} in ${countyLabel}`;
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: input, // Store the original query without county for display
+    };
+
+    const assistantMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "",
+    };
+
+    assistantMessageIdRef.current = assistantMessage.id;
+
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setInput("");
+    setIsStreaming(true);
+
+    const fullResponse = await fetchStreamingResponse(queryWithCounty);
+    return fullResponse;
+  };
+
+  const clearHistory = () => {
+    if (
+      window.confirm("Are you sure you want to clear all conversation history?")
+    ) {
+      setMessages([]);
+      stop();
+      localStorage.removeItem("law-navigator-county");
+      localStorage.removeItem("law-navigator-history");
+      setSelectedCounty("");
+    }
+  };
+
+  const fetchStreamingResponse = async (userInput: string): Promise<string> => {
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: userInput }],
+          county: selectedCounty, // Send the selected county
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("API request failed:", response.status);
+        setIsStreaming(false);
+        return "";
+      }
+
+      if (!response.body) {
+        console.error("No response body");
+        setIsStreaming(false);
+        return "";
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let result = "";
+
+      streamContentRef.current = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Decode the chunk
+        const chunk = decoder.decode(value);
+        console.log("📥 RAW CHUNK:", chunk);
+
+        // Parse AI SDK stream format
+        const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+        for (const line of lines) {
+          if (line.startsWith("0:")) {
+            // This is a text chunk from AI SDK
+            const content = line.substring(2).trim();
+
+            // Remove quotes if present
+            const unquotedContent = content.replace(/^"|"$/g, "");
+
+            // Handle escaped characters for plain text formatting
+            const decodedContent = unquotedContent
+              .replace(/\\n/g, " ") // Replace newlines with spaces
+              .replace(/\\r/g, "") // Remove carriage returns
+              .replace(/\\t/g, " ") // Replace tabs with spaces
+              .replace(/\\"/g, '"') // Unescape quotes
+              .replace(/\\'/g, "'") // Unescape single quotes
+              .replace(/\\\\/g, "\\") // Unescape backslashes
+              .replace(/\s+/g, " "); // Normalize multiple spaces
+
+            streamContentRef.current += decodedContent;
+            result += decodedContent;
+
+            // Update message content
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageIdRef.current
+                  ? { ...msg, content: streamContentRef.current }
+                  : msg
+              )
+            );
+          }
+        }
+      }
+
+      setIsStreaming(false);
+      return result;
+    } catch (error) {
+      console.error("Error in fetchStreamingResponse:", error);
+      setIsStreaming(false);
+      return "";
+    }
+  };
 
   return (
-    <div className="w-full h-full flex-1 pb-8 pt-20 flex flex-col justify-start items-center relative px-12">
+    <div className="w-full h-full flex-1 pb-8 pt-8 flex flex-col justify-start items-center relative px-12">
       <div className="w-full flex-1 flex-grow pb-12 px-12">
+        <div className="mb-12 flex items-center justify-center gap-4">
+          <Label className="text-lg font-medium" htmlFor="county-selector">
+            Select Jurisdiction
+          </Label>
+          <Select value={selectedCounty} onValueChange={handleCountyChange}>
+            <SelectTrigger
+              className="w-[300px] px-3 py-2 border rounded-md bg-background"
+              id="county-selector"
+            >
+              <SelectValue placeholder="Select county" />
+            </SelectTrigger>
+            <SelectContent className="w-[300px]">
+              {CALIFORNIA_COUNTIES.map((jurisdiction) => (
+                <SelectItem key={jurisdiction.value} value={jurisdiction.value}>
+                  {jurisdiction.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <ScrollArea className="w-full flex-grow">
           {!isEmpty ? (
             <MessageList
-              isTyping={isTyping}
+              isTyping={isStreaming}
               messages={messages}
               showTimeStamps={true}
             />
           ) : (
             <PromptSuggestions
-              label="Try one of these prompts!"
-              append={append} // This will update the chat input
-              suggestions={[
-                "Is a verbal contract legally binding?",
-                "What are the key regulations on property tax in Sierra_Madre?",
-                "How do I dispute a traffic ticket?",
-              ]}
+              label={
+                selectedCounty
+                  ? `Try one of these prompts - or ask your own question for ${
+                      CALIFORNIA_COUNTIES.find(
+                        (j) => j.value === selectedCounty
+                      )?.label
+                    }:`
+                  : "Select a jurisdiction above to get started!"
+              }
+              append={append}
+              suggestions={
+                selectedCounty
+                  ? [
+                      "What are the short-term rental regulations?",
+                      "What are the property tax rates?",
+                      "What are the noise ordinance rules?",
+                      "What are the building permit requirements?",
+                      "What are the zoning regulations?",
+                    ]
+                  : []
+              }
             />
           )}
         </ScrollArea>
@@ -50,7 +374,7 @@ export default function Home() {
       <div className="w-full sticky bottom-0 pt-2 bg-background px-12">
         <ChatForm
           className="w-full p-0 m-0 border-0"
-          isPending={isLoading || isTyping}
+          isPending={isStreaming}
           handleSubmit={handleSubmit}
         >
           {() => (
@@ -59,16 +383,41 @@ export default function Home() {
               value={input}
               onChange={handleInputChange}
               allowAttachments={false}
-              stop={stop}
-              isGenerating={isLoading}
-              placeholder="Ask Law Navigator..."
+              stop={() => {
+                if (streamIntervalRef.current) {
+                  clearInterval(streamIntervalRef.current);
+                  setIsStreaming(false);
+                }
+              }}
+              isGenerating={isStreaming}
+              placeholder={
+                selectedCounty
+                  ? `Ask about ${
+                      CALIFORNIA_COUNTIES.find(
+                        (j) => j.value === selectedCounty
+                      )?.label
+                    }...`
+                  : "Select a jurisdiction first..."
+              }
+              disabled={!selectedCounty}
             />
           )}
         </ChatForm>
 
-        <footer className="text-center p-2 text-sm text-black dark:text-white mt-4">
-          Law Navigator can make mistakes. Check important info.
-        </footer>
+        <div className="relative flex items-center justify-center mt-4">
+          <footer className="text-center p-2 text-sm text-black dark:text-white">
+            Law Navigator does not provide legal advice. Always verify
+            information independently.
+          </footer>
+          {messages.length > 0 && (
+            <button
+              onClick={clearHistory}
+              className="absolute right-0 text-sm text-red-500 hover:text-red-700"
+            >
+              Clear History
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
