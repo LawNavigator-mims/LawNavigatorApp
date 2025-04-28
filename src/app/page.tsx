@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { DownloadCsvButton } from "@/components/ui/download-csv-button";
 import { ChatForm } from "@/components/ui/chat";
 import { MessageInput } from "@/components/ui/message-input";
 import { PromptSuggestions } from "@/components/ui/prompt-suggestions";
@@ -90,6 +91,15 @@ export default function HomePage() {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [selectedCounty, setSelectedCounty] = useState<string>("");
 
+  // ─── CSV PROMPT STATE ───────────────────────────────────────────
+  // When an answer finishes, we’ll ask “Would you like a CSV?”
+  const [showCsvPrompt, setShowCsvPrompt] = useState(false);
+  // Track whether they clicked Yes (true) or No (false)
+  const [wantsCsv, setWantsCsv] = useState<boolean | null>(null);
+  // Remember the user’s raw question (no county appended)
+  const [lastQuery, setLastQuery] = useState<string>("");
+  // ────────────────────────────────────────────────────────────────
+
   const streamContentRef = useRef("");
   const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const assistantMessageIdRef = useRef<string>("");
@@ -152,6 +162,10 @@ export default function HomePage() {
       alert("Please select a jurisdiction first.");
       return;
     }
+
+    setLastQuery(input);
+    setShowCsvPrompt(false);
+    setWantsCsv(null);
 
     // Check if the input is a greeting
     const greetings = [
@@ -311,6 +325,7 @@ export default function HomePage() {
       }
 
       setIsStreaming(false);
+      setShowCsvPrompt(true);
       return result;
     } catch (error) {
       console.error("Error in fetchStreamingResponse:", error);
@@ -409,6 +424,32 @@ export default function HomePage() {
             />
           )}
         </ChatForm>
+
+        {/* ─── CSV PROMPT ─────────────────────────────────────────────── */}
+        {showCsvPrompt && wantsCsv === null && (
+          <div className="p-4 border-t flex items-center justify-center space-x-4">
+            <span>Would you like a copy of the raw data used for this response?</span>
+            <button
+              onClick={() => setWantsCsv(true)}
+              className="px-3 py-1 bg-green-600 text-white rounded"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => setWantsCsv(false)}
+              className="px-3 py-1 bg-red-600 text-white rounded"
+            >
+              No
+            </button>
+          </div>
+        )}
+
+        {/* ─── DOWNLOAD BUTTON ─────────────────────────────────────────── */}
+        {wantsCsv && (
+          <div className="p-4 border-t flex justify-center">
+            <DownloadCsvButton query={lastQuery} county={selectedCounty} />
+          </div>
+        )}
 
         <div className="relative flex items-center justify-center mt-4">
           <footer className="text-center p-2 text-sm text-black dark:text-white">
