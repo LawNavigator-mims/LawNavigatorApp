@@ -51,7 +51,7 @@ const data = {
       url: "#",
       items: [
         {
-          title: "How To Use Law Navigator",
+          title: "How To Use Unbarred",
           url: "#",
         },
         {
@@ -116,7 +116,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <ScaleIcon className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold text-lg">Law Navigator</span>
+                  <span className="font-semibold text-lg">UnBarred</span>
                 </div>
               </a>
               {/* <Image src="/public/logo.png" width={40} height={40} alt="Logo" /> */}

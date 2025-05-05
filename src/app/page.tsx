@@ -453,7 +453,7 @@ export default function HomePage() {
 
         <div className="relative flex items-center justify-center mt-4">
           <footer className="text-center p-2 text-sm text-black dark:text-white">
-            Law Navigator does not provide legal advice. Always verify
+            UnBarred does not provide legal advice. Always verify
             information independently.
           </footer>
           {messages.length > 0 && (

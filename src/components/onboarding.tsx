@@ -21,14 +21,14 @@ export default function Onboarding() {
 
   const stepContent = [
     {
-      title: "Welcome to Law Navigator",
+      title: "Welcome to UnBarred",
       description:
-        "Discover how Law Navigator can help you find clear, reliable answers to your legal questions.",
+        "Discover how UnBarred can help you find clear, reliable answers to your legal questions.",
     },
     {
       title: "How It Works",
       description:
-        "Type your question in the search bar, and Law Navigator will provide answers from trusted sources.",
+        "Type your question in the search bar, and UnBarred will provide answers from trusted sources.",
     },
     {
       title: "Explore Legal Topics",
@@ -38,7 +38,7 @@ export default function Onboarding() {
     {
       title: "Ready to Start?",
       description:
-        "Begin your journey to finding the legal information you need with Law Navigator.",
+        "Begin your journey to finding the legal information you need with UnBarred.",
     },
   ];
 
@@ -58,7 +58,7 @@ export default function Onboarding() {
     >
       <DialogTrigger asChild>
         <SidebarMenuSubButton asChild>
-          <span>How to use Law Navigator</span>
+          <span>How to use UnBarred</span>
         </SidebarMenuSubButton>
       </DialogTrigger>
       <DialogContent className="gap-0 p-0 [&>button:last-child]:text-white">

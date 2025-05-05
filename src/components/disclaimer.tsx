@@ -52,7 +52,7 @@ export default function LegalDisclaimer() {
                         <strong>Acceptance of Terms</strong>
                       </p>
                       <p>
-                        By accessing and using Law Navigator, users acknowledge
+                        By accessing and using UnBarred, users acknowledge
                         that the information provided is for educational and
                         informational purposes only and does not constitute
                         legal advice. Users who do not agree with this
@@ -66,7 +66,7 @@ export default function LegalDisclaimer() {
                         <strong>No Attorney-Client Relationships</strong>
                       </p>
                       <p>
-                        Law Navigator does not establish an attorney-client
+                        UnBarred does not establish an attorney-client
                         relationship. The app does not provide personalized
                         legal counsel. If you require legal assistance, please
                         consult a qualified attorney.
@@ -78,7 +78,7 @@ export default function LegalDisclaimer() {
                         <strong>Information Accuracy and Limitations</strong>
                       </p>
                       <p>
-                        While Law Navigator strives to provide accurate and
+                        While UnBarred strives to provide accurate and
                         up-to-date legal information, laws vary by jurisdiction
                         and may change over time. The app makes no guarantees
                         about the accuracy, completeness, or applicability of
@@ -91,7 +91,7 @@ export default function LegalDisclaimer() {
                         <strong>Limitation of Liability</strong>
                       </p>
                       <p>
-                        Law Navigator provides information “as is” without
+                        UnBarred provides information “as is” without
                         warranties of any kind. The app and its owners are not
                         liable for any direct, indirect, incidental,
                         consequential, or punitive damages arising from user
