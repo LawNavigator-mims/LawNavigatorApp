@@ -1,6 +1,18 @@
-// app/api/csv/route.ts
+// src/app/api/csv/route.ts
 import { NextResponse } from "next/server";
-import { createClient }  from "@supabase/supabase-js";
+import { createClient }   from "@supabase/supabase-js";
+
+type DocumentResult = {
+  id: number; 
+  title: string;
+  chapter: string;
+  section: string;
+  content: string;
+  filename: string;
+  page: string;
+  county: string;
+  similarity: number;  // double precision
+};
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -12,55 +24,42 @@ export async function GET(request: Request) {
   const query  = searchParams.get("query")  || "";
   const county = searchParams.get("county") || "";
 
-  // 1) Embed
-  const embedRes = await supabase.functions.invoke("generate-embeddings", {
-    body: { input: query },
-  });
-  if (embedRes.error) {
-    return NextResponse.json({ error: embedRes.error.message }, { status: 500 });
+  // 1) Generate embedding for the query
+  const { data: embedData, error: embedErr } = 
+    await supabase.functions.invoke("generate-embeddings", {
+      body: { input: query },
+    });
+  if (embedErr) {
+    console.error("Embedding error:", embedErr);
+    return NextResponse.json({ error: embedErr.message }, { status: 500 });
   }
-  const embedding = Object.values((embedRes.data as any).embedding) as number[];
+  const embedding = Object.values((embedData as any).embedding) as number[];
 
-  // 2) Call RPC just for IDs
-  const { data: matches, error: matchErr } = await supabase.rpc(
-    "match_documents",
-    {
-      query_embedding: embedding,
-      match_threshold:  0.1,
-      match_count:      10,
-    }
-  );
-  if (matchErr) {
-    return NextResponse.json({ error: matchErr.message }, { status: 500 });
+  // 2) Call the county‑scoped RPC exactly as in chat/route.ts
+  const { data: docs = [], error: rpcErr } = 
+    await supabase.rpc<DocumentResult[]>(
+      "match_documents_by_county",
+      {
+        county_param:     county,
+        query_embedding: embedding,
+        match_threshold: 0.1,
+        match_count:     10,
+      }
+    );
+  if (rpcErr) {
+    console.error("🚨 CSV‑RPC error:", rpcErr);
+    return NextResponse.json({ error: rpcErr.message }, { status: 500 });
   }
-  const ids = (matches || []).map((m: any) => m.id).filter(Boolean);
-  if (ids.length === 0) {
+
+  // 3) If no matches, return 204 No Content
+  if (docs.length === 0) {
     return new Response(null, { status: 204 });
   }
 
-  // 3) Re-fetch full rows with the six desired columns
-  let builder = supabase
-    .from("documents")
-    .select("title,chapter,section,content,county,filename")
-    .in("id", ids);
-
-  // // 4) Now apply county filter against the real data
-  // if (county) {
-  //   builder = builder.eq("county", county);
-  // }
-
-  const { data: rows, error: rowErr } = await builder;
-  if (rowErr) {
-    return NextResponse.json({ error: rowErr.message }, { status: 500 });
-  }
-  if (!rows || rows.length === 0) {
-    return new Response(null, { status: 204 });
-  }
-
-  // 5) Build CSV (no 'article' column)
+  // 4) Build CSV (dropping id, page, similarity)
   const cols   = ["title","chapter","section","content","county","filename"];
   const header = cols.join(",") + "\n";
-  const body   = rows
+  const body   = docs
     .map((r) =>
       cols
         .map((c) => `"${String((r as any)[c] ?? "").replace(/"/g, '""')}"`)
@@ -69,12 +68,12 @@ export async function GET(request: Request) {
     .join("\n");
   const csv = header + body;
 
-  // 6) Return as attachment
+  // 5) Return it as a downloadable attachment
   return new Response(csv, {
     status: 200,
     headers: {
       "Content-Type":        "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="data.csv"`,
+      "Content-Disposition": `attachment; filename="results.csv"`,
     },
   });
 }

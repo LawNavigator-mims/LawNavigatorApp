@@ -29,11 +29,11 @@ const supabase = createClient(
 
 // Map of county values to their full names
 const CALIFORNIA_COUNTIES = [
-  { value: "alameda", label: "Alameda County" },
-  { value: "alpine", label: "Alpine County" },
-  { value: "amador", label: "Amador County" },
+  { value: "Alameda County", label: "Alameda County" },
+  { value: "Alpine County", label: "Alpine County" },
+  { value: "Amador County California", label: "Amador County" },
   { value: "butte", label: "Butte County" },
-  { value: "calaveras", label: "Calaveras County" },
+  { value: "Calaveras County", label: "Calaveras County" },
   { value: "colusa", label: "Colusa County" },
   { value: "contra-costa", label: "Contra Costa County" },
   { value: "del-norte", label: "Del Norte County" },
@@ -42,30 +42,30 @@ const CALIFORNIA_COUNTIES = [
   { value: "glenn", label: "Glenn County" },
   { value: "humboldt", label: "Humboldt County" },
   { value: "imperial", label: "Imperial County" },
-  { value: "inyo", label: "Inyo County" },
+  { value: "Inyo County", label: "Inyo County" },
   { value: "kern", label: "Kern County" },
   { value: "kings", label: "Kings County" },
   { value: "lake", label: "Lake County" },
-  { value: "lassen", label: "Lassen County" },
+  { value: "Lassen County", label: "Lassen County" },
   { value: "los-angeles", label: "Los Angeles County" },
   { value: "madera", label: "Madera County" },
   { value: "marin", label: "Marin County" },
   { value: "mariposa", label: "Mariposa County" },
   { value: "mendocino", label: "Mendocino County" },
-  { value: "merced", label: "Merced County" },
+  { value: "Merced County", label: "Merced County" },
   { value: "modoc", label: "Modoc County" },
   { value: "mono", label: "Mono County" },
   { value: "monterey", label: "Monterey County" },
   { value: "napa", label: "Napa County" },
   { value: "nevada", label: "Nevada County" },
   { value: "orange", label: "Orange County" },
-  { value: "placer", label: "Placer County" },
+  { value: "Placer County", label: "Placer County" },
   { value: "plumas", label: "Plumas County" },
   { value: "riverside", label: "Riverside County" },
   { value: "sacramento", label: "Sacramento County" },
-  { value: "san-benito", label: "San Benito County" },
-  { value: "san-bernardino", label: "San Bernardino County" },
-  { value: "san-diego", label: "San Diego County" },
+  { value: "San Benito County", label: "San Benito County" },
+  { value: "San Bernardino", label: "San Bernardino County" },
+  { value: "San Diego", label: "San Diego County" },
   { value: "san-francisco", label: "San Francisco County" },
   { value: "san-joaquin", label: "San Joaquin County" },
   { value: "san-luis-obispo", label: "San Luis Obispo County" },
@@ -76,72 +76,73 @@ const CALIFORNIA_COUNTIES = [
   { value: "shasta", label: "Shasta County" },
   { value: "sierra", label: "Sierra County" },
   { value: "siskiyou", label: "Siskiyou County" },
-  { value: "solano", label: "Solano County" },
+  { value: "Solano County", label: "Solano County" },
   { value: "sonoma", label: "Sonoma County" },
-  { value: "stanislaus", label: "Stanislaus County" },
+  { value: "Stanislaus County", label: "Stanislaus County" },
   { value: "sutter", label: "Sutter County" },
   { value: "tehama", label: "Tehama County" },
   { value: "trinity", label: "Trinity County" },
   { value: "tulare", label: "Tulare County" },
   { value: "tuolumne", label: "Tuolumne County" },
   { value: "ventura", label: "Ventura County" },
-  { value: "yolo", label: "Yolo County" },
-  { value: "yuba", label: "Yuba County" },
-  { value: "sierra-madre", label: "Sierra Madre" },
+  { value: "Yolo County", label: "Yolo County" },
+  { value: "Yuba County", label: "Yuba County" },
+  { value: "Sierra Madre", label: "Sierra Madre" },
+];
+
+const SUPPORTED_COUNTIES = [
+  "Amador County California",
+  "Yuba County",
+  "Sierra Madre",
+  "Calaveras County",
+  "Solano County",
+  "Alameda County",
+  "Alpine County",
+  "Stanislaus County",
+  "Yolo County",
+  "Lassen County",
+  "Inyo County",
+  "Merced County",
+  "Placer County",
+  "San Benito County",
+  "San Diego",
+  "San Bernardino",
 ];
 
 async function searchDocuments(query: string, county?: string) {
-  console.log("Searching for:", query, "in county:", county);
+  if (!county) return "";
 
-  const { data: embeddingData } = await supabase.functions.invoke(
-    "generate-embeddings",
-    {
+  // 1) embed
+  const { data: embedData, error: embedErr } =
+    await supabase.functions.invoke("generate-embeddings", {
       body: { input: query },
-    }
-  );
-
-  const embeddingResult = embeddingData as EmbeddingResult;
-  const embedding = Array.from(Object.values(embeddingResult.embedding));
+    });
+  if (embedErr) {
+    console.error("Embedding error:", embedErr);
+    return "";
+  }
+  const embedding = Object.values((embedData as any).embedding) as number[];
 
   const args = {
     query_embedding: embedding,
     match_threshold: 0.1,
     match_count: 100,
+    county_param: county,      // exact label from county list in supabase
   };
-  const { data, error } = await supabase.rpc("match_documents", args);
-  if (error) {
-    console.error("❌ Supabase RPC error:", error.message);
-    return " ";
-  }
-
-  const typedData = data as DocumentResult[];
-
-  // Filter documents by county if provided
-  const filteredDocs = county
-    ? typedData.filter((row) => {
-        // More flexible county matching
-        const docCounty = row.county?.toLowerCase() || "";
-        const searchCounty = county.toLowerCase();
-
-        // Check if document county includes search county or vice versa
-        return (
-          docCounty.includes(searchCounty) || searchCounty.includes(docCounty)
-        );
-      })
-    : typedData;
-
-  console.log(`Found ${filteredDocs.length} documents for ${county}`);
-
-  // If no documents found for the specific county, return empty string
-  if (filteredDocs.length === 0) {
+  const rpc = await supabase.rpc("match_documents_by_county", args);
+  if (rpc.error) {
+    console.error("RPC error:", rpc.error);
     return "";
   }
+  const docs = (rpc.data ?? []) as DocumentResult[];
 
-  return filteredDocs
-    .slice(0, 10) // Limit to top 10 most relevant documents
-    .map((row) => row.content)
+  if (!docs.length) return "";
+
+  return docs
+    .slice(0, 10)
+    .map((d) => d.content)
     .join("\n")
-    .slice(0, 2000); // Increased from 1500 to 2000 for more context
+    .slice(0, 2000);
 }
 
 function buildPrompt(query: string, context: string, county?: string): string {
@@ -189,23 +190,23 @@ The user has selected: ${selectedCounty}
 You should only provide information relevant to this jurisdiction.
 
 ## SUPPORTED JURISDICTIONS
-This system currently has legal documents for:
-- Sierra Madre (City)
-- Amador County California  
-- Yuba County  
-- Calaveras County  
-- Solano County  
-- Alameda County  
-- Alpine County  
-- Stanislaus County  
-- Yolo County  
-- Lassen County  
-- Inyo County  
-- Merced County  
-- Placer County  
-- San Benito County  
-- San Diego  
-- San Bernardino 
+// This system currently has legal documents for:
+// - Sierra Madre (City)
+// - Amador County California  
+// - Yuba County  
+// - Calaveras County  
+// - Solano County  
+// - Alameda County  
+// - Alpine County  
+// - Stanislaus County  
+// - Yolo County  
+// - Lassen County  
+// - Inyo County  
+// - Merced County  
+// - Placer County  
+// - San Benito County  
+// - San Diego  
+// - San Bernardino 
 
 Start with a Yes / No / Unclear summary line before diving into details.
 
@@ -260,6 +261,22 @@ export async function POST(request: Request) {
   try {
     const { messages, county } = await request.json();
     const query = messages[messages.length - 1]?.content || "";
+
+    // Early‑exit if we have no documents for the chosen county
+    if (county) {
+      const { count, error } = await supabase
+        .from("documents")
+        .select("id", { head: true, count: "exact" })
+        .eq("county", county);
+
+      if (error) console.error("Count check error:", error);
+
+      // if there really are zero rows for that county, bail out
+      // simple exit: if no documents → 204 No Content
+      if (count === 0) {
+        return new Response(null, { status: 204 });
+      }
+    }
 
     const result = await generateResponse(query, county);
     return result.toDataStreamResponse();

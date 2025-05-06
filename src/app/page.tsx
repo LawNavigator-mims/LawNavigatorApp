@@ -24,11 +24,11 @@ type Message = {
 };
 
 const CALIFORNIA_COUNTIES = [
-  { value: "alameda", label: "Alameda County" },
-  { value: "alpine", label: "Alpine County" },
-  { value: "amador", label: "Amador County" },
+  { value: "Alameda County", label: "Alameda County" },
+  { value: "Alpine County", label: "Alpine County" },
+  { value: "Amador County California", label: "Amador County" },
   { value: "butte", label: "Butte County" },
-  { value: "calaveras", label: "Calaveras County" },
+  { value: "Calaveras County", label: "Calaveras County" },
   { value: "colusa", label: "Colusa County" },
   { value: "contra-costa", label: "Contra Costa County" },
   { value: "del-norte", label: "Del Norte County" },
@@ -37,30 +37,30 @@ const CALIFORNIA_COUNTIES = [
   { value: "glenn", label: "Glenn County" },
   { value: "humboldt", label: "Humboldt County" },
   { value: "imperial", label: "Imperial County" },
-  { value: "inyo", label: "Inyo County" },
+  { value: "Inyo County", label: "Inyo County" },
   { value: "kern", label: "Kern County" },
   { value: "kings", label: "Kings County" },
   { value: "lake", label: "Lake County" },
-  { value: "lassen", label: "Lassen County" },
+  { value: "Lassen County", label: "Lassen County" },
   { value: "los-angeles", label: "Los Angeles County" },
   { value: "madera", label: "Madera County" },
   { value: "marin", label: "Marin County" },
   { value: "mariposa", label: "Mariposa County" },
   { value: "mendocino", label: "Mendocino County" },
-  { value: "merced", label: "Merced County" },
+  { value: "Merced County", label: "Merced County" },
   { value: "modoc", label: "Modoc County" },
   { value: "mono", label: "Mono County" },
   { value: "monterey", label: "Monterey County" },
   { value: "napa", label: "Napa County" },
   { value: "nevada", label: "Nevada County" },
   { value: "orange", label: "Orange County" },
-  { value: "placer", label: "Placer County" },
+  { value: "Placer County", label: "Placer County" },
   { value: "plumas", label: "Plumas County" },
   { value: "riverside", label: "Riverside County" },
   { value: "sacramento", label: "Sacramento County" },
-  { value: "san-benito", label: "San Benito County" },
-  { value: "san-bernardino", label: "San Bernardino County" },
-  { value: "san-diego", label: "San Diego County" },
+  { value: "San Benito County", label: "San Benito County" },
+  { value: "San Bernardino", label: "San Bernardino County" },
+  { value: "San Diego", label: "San Diego County" },
   { value: "san-francisco", label: "San Francisco County" },
   { value: "san-joaquin", label: "San Joaquin County" },
   { value: "san-luis-obispo", label: "San Luis Obispo County" },
@@ -71,18 +71,18 @@ const CALIFORNIA_COUNTIES = [
   { value: "shasta", label: "Shasta County" },
   { value: "sierra", label: "Sierra County" },
   { value: "siskiyou", label: "Siskiyou County" },
-  { value: "solano", label: "Solano County" },
+  { value: "Solano County", label: "Solano County" },
   { value: "sonoma", label: "Sonoma County" },
-  { value: "stanislaus", label: "Stanislaus County" },
+  { value: "Stanislaus County", label: "Stanislaus County" },
   { value: "sutter", label: "Sutter County" },
   { value: "tehama", label: "Tehama County" },
   { value: "trinity", label: "Trinity County" },
   { value: "tulare", label: "Tulare County" },
   { value: "tuolumne", label: "Tuolumne County" },
   { value: "ventura", label: "Ventura County" },
-  { value: "yolo", label: "Yolo County" },
-  { value: "yuba", label: "Yuba County" },
-  { value: "sierra-madre", label: "Sierra Madre (City)" },
+  { value: "Yolo County", label: "Yolo County" },
+  { value: "Yuba County", label: "Yuba County" },
+  { value: "Sierra Madre", label: "Sierra Madre" },
 ];
 
 export default function HomePage() {
@@ -159,7 +159,7 @@ export default function HomePage() {
     if (!input.trim()) return;
 
     if (!selectedCounty) {
-      alert("Please select a jurisdiction first.");
+      alert("Please select a county first.");
       return;
     }
 
@@ -255,7 +255,13 @@ export default function HomePage() {
           county: selectedCounty,
         }),
       });
-
+      
+      const contentType = response.headers.get("Content-Type") || "";
+      console.log("CHAT RESPONSE:", {
+        status: response.status,
+        contentType,
+      });
+      
       if (!response.ok) {
         console.error("API request failed:", response.status);
         setIsStreaming(false);
@@ -266,6 +272,24 @@ export default function HomePage() {
         console.error("No response body");
         setIsStreaming(false);
         return "";
+      }
+      
+      if (response.status === 204) {
+        const countyLabel = CALIFORNIA_COUNTIES.find(
+          (j) => j.value === selectedCounty
+        )?.label;
+        const apology = `I'm sorry but our system currently has no ordinances for ${countyLabel}. Please try a different county.`;
+        // inject apology into the assistant bubble:
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageIdRef.current
+              ? { ...msg, content: apology }
+              : msg
+          )
+        );
+        setIsStreaming(false);
+        // skip the CSV prompt
+        return apology;
       }
 
       const reader = response.body.getReader();
@@ -339,7 +363,7 @@ export default function HomePage() {
       <div className="w-full flex-1 flex-grow pb-12 px-12">
         <div className="mb-12 flex items-center justify-center gap-4">
           <Label className="text-lg font-medium" htmlFor="county-selector">
-            Select Jurisdiction
+            Select County
           </Label>
           <Select value={selectedCounty} onValueChange={handleCountyChange}>
             <SelectTrigger
@@ -374,7 +398,7 @@ export default function HomePage() {
                         (j) => j.value === selectedCounty
                       )?.label
                     }:`
-                  : "Select a jurisdiction above to get started!"
+                  : "Select a county above to get started!"
               }
               append={append}
               suggestions={
@@ -418,7 +442,7 @@ export default function HomePage() {
                         (j) => j.value === selectedCounty
                       )?.label
                     }...`
-                  : "Select a jurisdiction first..."
+                  : "Select a county first..."
               }
               disabled={!selectedCounty}
             />
