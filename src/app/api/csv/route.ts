@@ -35,21 +35,22 @@ export async function GET(request: Request) {
   }
   const embedding = Object.values((embedData as any).embedding) as number[];
 
-  // 2) Call the county‑scoped RPC exactly as in chat/route.ts
-  const { data: docs = [], error: rpcErr } = 
-    await supabase.rpc<DocumentResult[]>(
-      "match_documents_by_county",
-      {
-        county_param:     county,
-        query_embedding: embedding,
-        match_threshold: 0.1,
-        match_count:     10,
-      }
-    );
-  if (rpcErr) {
-    console.error("🚨 CSV‑RPC error:", rpcErr);
-    return NextResponse.json({ error: rpcErr.message }, { status: 500 });
+  // 2) Call the county‑scoped RPC exactly as in chat/route.ts (no generics)
+  const args = {
+    county_param:     county,
+    query_embedding:  embedding,
+    match_threshold:  0.1,
+    match_count:      10,
+  };
+
+  const rpc = await supabase.rpc("match_documents_by_county", args);
+  if (rpc.error) {
+    console.error("🚨 CSV‑RPC error:", rpc.error);
+    return NextResponse.json({ error: rpc.error.message }, { status: 500 });
   }
+
+  // cast to the correct type
+  const docs = (rpc.data ?? []) as DocumentResult[];
 
   // 3) If no matches, return 204 No Content
   if (docs.length === 0) {
