@@ -278,7 +278,9 @@ export default function HomePage() {
         const countyLabel = CALIFORNIA_COUNTIES.find(
           (j) => j.value === selectedCounty
         )?.label;
-        const apology = `I'm sorry but our system currently has no ordinances for ${countyLabel}. Please try a different county.`;
+        const apology = 
+        `I'm sorry, ordinances for ${countyLabel} are not available yet. They have not been added to our system. 
+        Please try a different county for now, and check back soon as we continue to expand coverage.`;
         // inject apology into the assistant bubble:
         setMessages((prev) =>
           prev.map((msg) =>
